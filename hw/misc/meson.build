@@ -122,6 +122,10 @@ softmmu_ss.add(when: 'CONFIG_XTENSA_ESP32', if_true: files(
   'esp32_flash_enc.c',
   'ssi_psram.c'
 ))
+softmmu_ss.add(when: 'CONFIG_XTENSA_ESP8266', if_true: files(
+  'esp8266_dport.c',
+  'esp8266_rtc_cntl.c'
+))
 
 if 'CONFIG_GCRYPT' in config_host
   softmmu_ss.add(gcrypt)

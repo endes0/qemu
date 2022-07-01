@@ -39,7 +39,7 @@ enum {
 };
 
 
-#define ESP32_SPI_REG_SIZE    0x1000
+#define ESP32_SPI_REG_SIZE    0x100
 
 static void esp32_spi_do_command(Esp32SpiState* state, uint32_t cmd_reg);
 
@@ -81,6 +81,9 @@ static uint64_t esp32_spi_read(void *opaque, hwaddr addr, unsigned int size)
     case A_SPI_PIN:
         r = s->pin_reg;
         break;
+    case A_SPI_W0_ESP8266 ... A_SPI_W0_ESP8266 + (ESP32_SPI_BUF_WORDS - 1) * sizeof(uint32_t):
+        r = s->data_reg[(addr - A_SPI_W0_ESP8266) / sizeof(uint32_t)];
+        break;
     case A_SPI_W0 ... A_SPI_W0 + (ESP32_SPI_BUF_WORDS - 1) * sizeof(uint32_t):
         r = s->data_reg[(addr - A_SPI_W0) / sizeof(uint32_t)];
         break;
@@ -96,6 +99,9 @@ static void esp32_spi_write(void *opaque, hwaddr addr,
 {
     Esp32SpiState *s = ESP32_SPI(opaque);
     switch (addr) {
+    case A_SPI_W0_ESP8266 ... A_SPI_W0_ESP8266 + (ESP32_SPI_BUF_WORDS - 1) * sizeof(uint32_t):
+        s->data_reg[(addr - A_SPI_W0_ESP8266) / sizeof(uint32_t)] = value;
+        break;
     case A_SPI_W0 ... A_SPI_W0 + (ESP32_SPI_BUF_WORDS - 1) * sizeof(uint32_t):
         s->data_reg[(addr - A_SPI_W0) / sizeof(uint32_t)] = value;
         break;
@@ -119,6 +125,11 @@ static void esp32_spi_write(void *opaque, hwaddr addr,
         break;
     case A_SPI_USER1:
         s->user1_reg = value;
+        //TODO: check if esp8266
+        s->miso_dlen_reg = FIELD_EX32(value, SPI_USER1, MISO_DLEN_ESP8266);
+        s->mosi_dlen_reg = FIELD_EX32(value, SPI_USER1, MOSI_DLEN_ESP8266);
+        qemu_log("%s: miso_dleng=%d\n", __func__, s->miso_dlen_reg);
+        qemu_log("%s: mosi_dleng=%d\n", __func__, s->mosi_dlen_reg);
         break;
     case A_SPI_USER2:
         s->user2_reg = value;
@@ -133,6 +144,7 @@ static void esp32_spi_write(void *opaque, hwaddr addr,
         s->pin_reg = value;
         break;
     case A_SPI_CMD:
+        //qemu_log("SPI command: 0x%lx\n", value);
         esp32_spi_do_command(s, value);
         break;
     }
@@ -178,6 +190,11 @@ static void esp32_spi_transaction(Esp32SpiState *s, Esp32SpiTransaction *t)
     esp32_spi_txrx_buffer(s, &t->addr, t->addr_bytes, 0);
     esp32_spi_txrx_buffer(s, t->data, t->data_tx_bytes, t->data_rx_bytes);
     esp32_spi_cs_set(s, 1);
+
+    //qemu_log("SPI transaction: cmd: 0x%x, addr: 0x%x\n", t->cmd, t->addr);
+    //for (int i = 0; i < MAX(t->data_tx_bytes, t->data_rx_bytes); ++i) {
+    //    qemu_log("SPI data: 0x%x\n", t->data[i]);
+    //}
 }
 
 /* Convert one of the hardware "bitlen" registers to a byte count */
@@ -203,9 +220,23 @@ static void esp32_spi_do_command(Esp32SpiState* s, uint32_t cmd_reg)
     case R_SPI_CMD_READ_MASK:
         t.cmd = CMD_READ;
         t.addr_bytes = bitlen_to_bytes(FIELD_EX32(s->user1_reg, SPI_USER1, ADDR_BITLEN));
-        t.addr = bswap32(s->addr_reg) >> (32 - t.addr_bytes * 8);
+        if (s->is_esp8266)
+        {
+            t.addr = bswap32(s->addr_reg) >> 8;
+        } else
+        {
+            t.addr = bswap32(s->addr_reg) >> (32 - t.addr_bytes * 8);
+        }
         t.data = &s->data_reg[0];
-        t.data_rx_bytes = bitlen_to_bytes(s->miso_dlen_reg);
+        if (s->is_esp8266)
+        {
+            t.data_rx_bytes = s->addr_reg >> 24;
+        } else
+        {
+            t.data_rx_bytes = bitlen_to_bytes(s->miso_dlen_reg);
+        }
+
+        //qemu_log("SPI reading %d bytes from 0x%x\n", t.data_rx_bytes, t.addr);
         break;
 
     case R_SPI_CMD_WREN_MASK:
@@ -292,6 +323,7 @@ static void esp32_spi_do_command(Esp32SpiState* s, uint32_t cmd_reg)
         }
         break;
     default:
+        qemu_log_mask(LOG_UNIMP, "%s: unknown command 0x%x\n", __func__, cmd_reg);
         return;
     }
     esp32_spi_transaction(s, &t);
@@ -332,6 +364,7 @@ static void esp32_spi_init(Object *obj)
 }
 
 static Property esp32_spi_properties[] = {
+    DEFINE_PROP_BOOL("is_esp8266", Esp32SpiState, is_esp8266, false),
     DEFINE_PROP_END_OF_LIST(),
 };
 

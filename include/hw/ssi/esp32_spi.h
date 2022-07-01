@@ -12,6 +12,7 @@
 
 typedef struct Esp32SpiState {
     SysBusDevice parent_obj;
+    bool is_esp8266;
 
     MemoryRegion iomem;
     qemu_irq irq;
@@ -84,5 +85,12 @@ REG32(SPI_EXT0, 0xF0)
 REG32(SPI_EXT1, 0xF4)
 REG32(SPI_EXT2, 0xF8)
 REG32(SPI_EXT3, 0xFC)
+
+// ESP8266
+REG32(SPI_W0_ESP8266, 0x40)
+
+FIELD(SPI_USER1, MISO_DLEN_ESP8266, 8, 9)
+FIELD(SPI_USER1, MOSI_DLEN_ESP8266, 17, 9)
+
 
 
