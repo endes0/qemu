@@ -27,13 +27,18 @@ static uint64_t esp8266_rtc_cntl_read(void *opaque, hwaddr addr, unsigned int si
     Esp8266RtcCntlState *s = ESP8266_RTC_CNTL(opaque);
     uint64_t r = 0;
     switch (addr) {
+    case A_RTC_INT_ENABLE:
+        // TODO: implement this
+        r = FIELD_DP32(r, RTC_INT_ENABLE, WAKEUP_STATE, 1);
+        break;
     case A_RTC_SLEEP_TARGET:
         qemu_log_mask(LOG_UNIMP, "%s: read from RTC_SLEEP_TARGET\n", __func__);
         break;
     case A_RTC_STATE1:
         r = FIELD_DP32(r, RTC_STATE1, HW_RESET_CAUSE, s->reset_cause);
         break;
-    case A_RTC_STATE2 ... A_PAD_XPD_DCDC_CONF:
+    case A_RTC_STATE2 ... A_RTC_INT_CLEAR:
+    case A_RTC_STORE0 ... A_PAD_XPD_DCDC_CONF:
         qemu_log_mask(LOG_UNIMP, "%s: read from 0x%" HWADDR_PRIx "\n", __func__, addr);
         break;
     }
