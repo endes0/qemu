@@ -501,7 +501,7 @@ static void esp8266_machine_init_spi_flash(Esp8266SocState *ss, BlockBackend* bl
     /* "main" flash chip is attached to SPI0, CS0 */
     DeviceState *spi_master = DEVICE(&ss->spi[0]);
     BusState* spi_bus = qdev_get_child_bus(spi_master, "spi");
-    DeviceState *flash_dev = qdev_new("sst25vf032b"); // sst25vf032b gd25q32
+    DeviceState *flash_dev = qdev_new("gd25q32"); // sst25vf032b gd25q32
     qdev_prop_set_drive(flash_dev, "drive", blk);
     qdev_realize_and_unref(flash_dev, spi_bus, &error_fatal);
     qdev_connect_gpio_out_named(spi_master, SSI_GPIO_CS, 0,

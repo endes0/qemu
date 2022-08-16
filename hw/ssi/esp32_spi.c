@@ -191,10 +191,12 @@ static void esp32_spi_transaction(Esp32SpiState *s, Esp32SpiTransaction *t)
     esp32_spi_txrx_buffer(s, t->data, t->data_tx_bytes, t->data_rx_bytes);
     esp32_spi_cs_set(s, 1);
 
-    //qemu_log("SPI transaction: cmd: 0x%x, addr: 0x%x\n", t->cmd, t->addr);
-    //for (int i = 0; i < MAX(t->data_tx_bytes, t->data_rx_bytes); ++i) {
-    //    qemu_log("SPI data: 0x%x\n", t->data[i]);
-    //}
+    /*qemu_log("SPI transaction: cmd: 0x%x, addr: 0x%x\n", t->cmd, bswap32(t->addr));
+    qemu_log("SPI data: ");
+    for (int i = 0; i * sizeof(uint32_t) < MAX(t->data_tx_bytes, t->data_rx_bytes); i++) {
+        qemu_log("0x%x ", t->data[i]);
+    }
+    qemu_log("\n");*/
 }
 
 /* Convert one of the hardware "bitlen" registers to a byte count */
@@ -219,13 +221,14 @@ static void esp32_spi_do_command(Esp32SpiState* s, uint32_t cmd_reg)
     switch (cmd_reg) {
     case R_SPI_CMD_READ_MASK:
         t.cmd = CMD_READ;
-        t.addr_bytes = bitlen_to_bytes(FIELD_EX32(s->user1_reg, SPI_USER1, ADDR_BITLEN));
         if (s->is_esp8266)
         {
             t.addr = bswap32(s->addr_reg) >> 8;
+            t.addr_bytes = 3;
         } else
         {
             t.addr = bswap32(s->addr_reg) >> (32 - t.addr_bytes * 8);
+            t.addr_bytes = bitlen_to_bytes(FIELD_EX32(s->user1_reg, SPI_USER1, ADDR_BITLEN));
         }
         t.data = &s->data_reg[0];
         if (s->is_esp8266)
@@ -269,7 +272,13 @@ static void esp32_spi_do_command(Esp32SpiState* s, uint32_t cmd_reg)
         maybe_encrypt_data(s);
         t.cmd = CMD_PP;
         t.data = &s->data_reg[0];
-        t.addr_bytes = bitlen_to_bytes(FIELD_EX32(s->user1_reg, SPI_USER1, ADDR_BITLEN));
+        if (s->is_esp8266)
+        {
+            t.addr_bytes = 3;
+        } else
+        {
+            t.addr_bytes = bitlen_to_bytes(FIELD_EX32(s->user1_reg, SPI_USER1, ADDR_BITLEN));
+        }
         t.addr = bswap32(s->addr_reg) >> 8;
         t.data = &s->data_reg[0];
         t.data_tx_bytes = s->addr_reg >> 24;
@@ -277,14 +286,29 @@ static void esp32_spi_do_command(Esp32SpiState* s, uint32_t cmd_reg)
 
     case R_SPI_CMD_SE_MASK:
         t.cmd = CMD_SE;
-        t.addr_bytes = bitlen_to_bytes(FIELD_EX32(s->user1_reg, SPI_USER1, ADDR_BITLEN));
-        t.addr = bswap32(s->addr_reg) >> (32 - t.addr_bytes * 8);
+        if (s->is_esp8266)
+        {
+            t.addr = bswap32(s->addr_reg) >> 8;
+            t.addr_bytes = 3;
+        } else
+        {
+            t.addr = bswap32(s->addr_reg) >> (32 - t.addr_bytes * 8);
+            t.addr_bytes = bitlen_to_bytes(FIELD_EX32(s->user1_reg, SPI_USER1, ADDR_BITLEN));
+        }
         break;
 
     case R_SPI_CMD_BE_MASK:
         t.cmd = CMD_BE;
-        t.addr_bytes = bitlen_to_bytes(FIELD_EX32(s->user1_reg, SPI_USER1, ADDR_BITLEN));
-        t.addr = bswap32(s->addr_reg) >> (32 - t.addr_bytes * 8);
+        if (s->is_esp8266)
+        {
+            t.addr = bswap32(s->addr_reg) >> 8;
+            t.addr_bytes = 3;
+
+        } else
+        {
+            t.addr = bswap32(s->addr_reg) >> (32 - t.addr_bytes * 8);
+            t.addr_bytes = bitlen_to_bytes(FIELD_EX32(s->user1_reg, SPI_USER1, ADDR_BITLEN));
+        }
         break;
 
     case R_SPI_CMD_CE_MASK:
