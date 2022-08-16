@@ -206,7 +206,7 @@ static inline int bitlen_to_bytes(uint32_t val)
 static void maybe_encrypt_data(Esp32SpiState *s)
 {
     Esp32FlashEncryptionState* flash_enc = esp32_flash_encryption_find();
-    if (esp32_flash_encryption_enabled(flash_enc)) {
+    if (flash_enc != NULL && esp32_flash_encryption_enabled(flash_enc)) {
         esp32_flash_encryption_get_result(flash_enc, &s->data_reg[0], 8);
     }
 }
