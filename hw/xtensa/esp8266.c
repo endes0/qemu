@@ -366,7 +366,7 @@ static void esp8266_soc_realize(DeviceState *dev, Error **errp)
     create_unimplemented_device("esp8266.timer", DR_REG_TIMER_BASE, 0x100);
     create_unimplemented_device("esp8266.RTC", DR_REG_RTC_BASE, 0x100);
     create_unimplemented_device("esp8266.IOMUX", DR_REG_IO_MUX_BASE, 0x100);
-    create_unimplemented_device("esp8266.watchdog", DR_REG_WATCHDOG_BASE, 0x2);
+    create_unimplemented_device("esp8266.watchdog", DR_REG_WATCHDOG_BASE, 0x200);
     create_unimplemented_device("esp8266.SLC", DR_REG_SLC_BASE, 0x200);
     create_unimplemented_device("esp8266.ADC", DR_REG_ADC_RF_BASE, 0x100);
     create_unimplemented_device("esp8266.I2S", DR_REG_I2S_BASE, 0x100);
