@@ -10,6 +10,7 @@
 #include "hw/nvram/esp8266_efuse.h"
 #include "hw/gpio/esp8266_gpio.h"
 #include "hw/ssi/esp32_spi.h"
+#include "hw/adc/esp8266_adc.h"
 #include "target/xtensa/cpu.h"
 
 typedef struct Esp8266SocState {
@@ -28,6 +29,7 @@ typedef struct Esp8266SocState {
     //Esp32FrcTimerState frc_timer[ESP32_FRC_COUNT];
     //Esp32TimgState timg[ESP32_TIMG_COUNT];
     Esp32SpiState spi[2];
+    Esp8266AdcState adc;
     //Esp32I2CState i2c[ESP32_I2C_COUNT];
     //Esp32ShaState sha;
     //Esp32RsaState rsa;

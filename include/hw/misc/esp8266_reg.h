@@ -14,7 +14,7 @@
 #define DR_REG_IO_MUX_BASE 0x60000800
 #define DR_REG_WATCHDOG_BASE 0x60000900
 #define DR_REG_SLC_BASE 0x60000b00
-#define DR_REG_ADC_RF_BASE 0x60000d00 // Related to the ADC and RF part, no info availiable
+#define DR_REG_SAR_BASE 0x60000d00 // Related to the ADC, RF, clocks(cristals and PLL) and internal i2c, no info availiable
 #define DR_REG_I2S_BASE 0x60000e00
 #define DR_REG_UART1_BASE 0x60000f00
 

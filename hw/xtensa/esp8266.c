@@ -120,6 +120,7 @@ static void esp8266_soc_reset(DeviceState *dev)
         for (int i = 0; i < ESP32_I2C_COUNT; i++) {
             device_cold_reset(DEVICE(&s->i2c[i]));
         }*/
+        device_cold_reset(DEVICE(&s->adc));
         device_cold_reset(DEVICE(&s->efuse));
         /*if (s->eth) {
             device_cold_reset(s->eth);
@@ -341,6 +342,12 @@ static void esp8266_soc_realize(DeviceState *dev, Error **errp)
     //qdev_realize(DEVICE(&s->rng), &s->periph_bus, &error_fatal);
     //esp32_soc_add_periph_device(sys_mem, &s->rng, ESP32_RNG_BASE);
 
+    
+
+    //Device: ADC
+    qdev_realize(DEVICE(&s->adc), &s->periph_bus, &error_fatal);
+    esp8266_soc_add_periph_device(sys_mem, &s->adc, DR_REG_SAR_BASE);
+
     //Device: eFuse
     qdev_realize(DEVICE(&s->efuse), &s->periph_bus, &error_fatal);
     esp8266_soc_add_periph_device(sys_mem, &s->efuse, DR_REG_EFUSE_BASE);
@@ -368,7 +375,7 @@ static void esp8266_soc_realize(DeviceState *dev, Error **errp)
     create_unimplemented_device("esp8266.IOMUX", DR_REG_IO_MUX_BASE, 0x100);
     create_unimplemented_device("esp8266.watchdog", DR_REG_WATCHDOG_BASE, 0x200);
     create_unimplemented_device("esp8266.SLC", DR_REG_SLC_BASE, 0x200);
-    create_unimplemented_device("esp8266.ADC", DR_REG_ADC_RF_BASE, 0x100);
+    //create_unimplemented_device("esp8266.ADC", DR_REG_ADC_RF_BASE, 0x100);
     create_unimplemented_device("esp8266.I2S", DR_REG_I2S_BASE, 0x100);
     create_unimplemented_device("esp8266.WIFI", DR_REG_WIFI_BASE, 0x700);
     create_unimplemented_device("esp8266.WDEV", DR_REG_WDEV_BASE, 0x49C);
@@ -450,6 +457,9 @@ static void esp8266_soc_init(Object *obj)
     //object_initialize_child(obj, "sha", &s->sha, TYPE_ESP32_SHA);
 
     //object_initialize_child(obj, "rsa", &s->rsa, TYPE_ESP32_RSA);
+
+
+    object_initialize_child(obj, "adc", &s->adc, TYPE_ESP8266_ADC);
 
     object_initialize_child(obj, "efuse", &s->efuse, TYPE_ESP8266_EFUSE);
 
