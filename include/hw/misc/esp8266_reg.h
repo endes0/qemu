@@ -3,16 +3,18 @@
 // Registers memory map
 #define DR_REG_DPORT_BASE 0x3ff00000
 #define DR_REG_EFUSE_BASE 0x3ff00050
-#define DR_REG_WDEV_BASE 0x3ff20c00
+#define DR_REG_WDEV_BASE 0x3ff20000
 #define DR_REG_RNG_BASE 0x3ff20e44
 #define DR_REG_UART0_BASE 0x60000000
 #define DR_REG_SPI1_BASE 0x60000100
 #define DR_REG_SPI0_BASE 0x60000200
 #define DR_REG_GPIO_BASE 0x60000300
+#define DR_REG_HDRF_BASE 0x60000500 // Related to the power, gain and attenuation, no info availiable
 #define DR_REG_TIMER_BASE 0x60000600
 #define DR_REG_RTC_BASE 0x60000700
 #define DR_REG_IO_MUX_BASE 0x60000800
 #define DR_REG_WATCHDOG_BASE 0x60000900
+#define DR_REG_SDIO_BASE 0x60000a00
 #define DR_REG_SLC_BASE 0x60000b00
 #define DR_REG_SAR_BASE 0x60000d00 // Related to the ADC, RF, clocks(cristals and PLL) and internal i2c, no info availiable
 #define DR_REG_I2S_BASE 0x60000e00

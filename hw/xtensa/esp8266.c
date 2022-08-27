@@ -342,7 +342,9 @@ static void esp8266_soc_realize(DeviceState *dev, Error **errp)
     //qdev_realize(DEVICE(&s->rng), &s->periph_bus, &error_fatal);
     //esp32_soc_add_periph_device(sys_mem, &s->rng, ESP32_RNG_BASE);
 
-    
+    //Device: HDRF
+    qdev_realize(DEVICE(&s->hdrf), &s->periph_bus, &error_fatal);
+    esp8266_soc_add_periph_device(sys_mem, &s->hdrf, DR_REG_HDRF_BASE);
 
     //Device: ADC
     qdev_realize(DEVICE(&s->adc), &s->periph_bus, &error_fatal);
@@ -458,6 +460,7 @@ static void esp8266_soc_init(Object *obj)
 
     //object_initialize_child(obj, "rsa", &s->rsa, TYPE_ESP32_RSA);
 
+    object_initialize_child(obj, "hdrf", &s->hdrf, TYPE_ESP8266_HDRF);
 
     object_initialize_child(obj, "adc", &s->adc, TYPE_ESP8266_ADC);
 
