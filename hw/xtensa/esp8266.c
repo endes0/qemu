@@ -379,8 +379,8 @@ static void esp8266_soc_realize(DeviceState *dev, Error **errp)
     create_unimplemented_device("esp8266.SLC", DR_REG_SLC_BASE, 0x200);
     //create_unimplemented_device("esp8266.ADC", DR_REG_ADC_RF_BASE, 0x100);
     create_unimplemented_device("esp8266.I2S", DR_REG_I2S_BASE, 0x100);
-    create_unimplemented_device("esp8266.WIFI", DR_REG_WIFI_BASE, 0x700);
-    create_unimplemented_device("esp8266.WDEV", DR_REG_WDEV_BASE, 0x49C);
+    create_unimplemented_device("esp8266.WIFI", DR_REG_WIFI_BASE, 0x800);
+    create_unimplemented_device("esp8266.WDEV", DR_REG_WDEV_BASE, 0x1800);
 
 
     qemu_register_reset((QEMUResetHandler*) esp8266_soc_reset, dev);
