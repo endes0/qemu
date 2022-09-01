@@ -6,3 +6,7 @@ npcm7xx_adc_write(const char *id, uint64_t offset, uint32_t value) "%s offset: 0
 
 aspeed_adc_engine_read(uint32_t engine_id, uint64_t addr, uint64_t value) "engine[%u] 0x%" PRIx64 " 0x%" PRIx64
 aspeed_adc_engine_write(uint32_t engine_id, uint64_t addr, uint64_t value) "engine[%u] 0x%" PRIx64 " 0x%" PRIx64
+
+# esp8266_adc.c
+esp8266_adc_read(uint32_t addr, uint32_t value) "addr: 0x%04" PRIx32 " value 0x%04" PRIx32
+esp8266_adc_write(uint32_t addr, uint32_t value) "addr: 0x%04" PRIx32 " value 0x%04" PRIx32
