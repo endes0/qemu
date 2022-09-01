@@ -16,7 +16,9 @@
 #define DR_REG_WATCHDOG_BASE 0x60000900
 #define DR_REG_SDIO_BASE 0x60000a00
 #define DR_REG_SLC_BASE 0x60000b00
-#define DR_REG_SAR_BASE 0x60000d00 // Related to the ADC, RF, clocks(cristals and PLL) and internal i2c, no info availiable
+#define DR_REG_INTERNAL_I2C_BASE 0x60000d00 // length 0x40
+#define DR_REG_PM_BASE 0x60000d40 // length 0x10
+#define DR_REG_SAR_BASE 0x60000d50 // length 0xB0
 #define DR_REG_I2S_BASE 0x60000e00
 #define DR_REG_UART1_BASE 0x60000f00
 
