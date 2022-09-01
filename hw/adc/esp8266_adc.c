@@ -8,6 +8,21 @@
 #include "hw/sysbus.h"
 #include "hw/adc/esp8266_adc.h"
 
+#define CORRECTION_FACTOR 11/12
+#define DEFAULT_VDD 3.3
+#define DEFAULT_TOUT 0.0
+
+static uint16_t esp8266_adc_to_reg_value(uint16_t value)
+{
+    uint16_t x = value & 0x700;
+    uint16_t y = value & 0x0FF;
+    if (y > 0)
+    {
+        x += (y/279) << 8;
+    }
+    
+    return ~(x + 21);
+}
 
 static uint64_t esp8266_adc_read(void *opaque, hwaddr addr, unsigned int size)
 {
@@ -15,9 +30,25 @@ static uint64_t esp8266_adc_read(void *opaque, hwaddr addr, unsigned int size)
     uint32_t r = 0;
 
     switch (addr) {
-    case A_TOS_CAL_DATA:
-        //TODO: implement
-        r = s->calibration_reg;
+    case A_SAR_W0 ... A_SAR_W7:
+        if (s->vdd_mode)
+        {
+            //TODO: custom VDD
+            //min 0,001 max 
+            r = esp8266_adc_to_reg_value(((DEFAULT_VDD * 512) - 1/4) * CORRECTION_FACTOR);
+        }
+        else if (s->tout_mode)
+        {
+            //TODO: custom TOUT
+            // min 0 v == r=0
+            // max 1 v == r=2047
+            r = esp8266_adc_to_reg_value(((DEFAULT_TOUT * 2047) ) * CORRECTION_FACTOR);;
+        }
+        else
+        {
+            //TODO: implement
+            r = 0;
+        }
         break;
     default:
         qemu_log_mask(LOG_UNIMP, "%s: unimplemented read from 0x%" HWADDR_PRIx "\n",
@@ -25,6 +56,7 @@ static uint64_t esp8266_adc_read(void *opaque, hwaddr addr, unsigned int size)
         break;
     }
     
+    trace_esp8266_adc_read(addr, r);
     return r;
 }
 
@@ -34,14 +66,13 @@ static void esp8266_adc_write(void *opaque, hwaddr addr,
     Esp8266AdcState *s = ESP8266_ADC(opaque);
 
     switch (addr) {
-    case A_TOS_CAL_DATA:
-        s->calibration_reg = value;
-        break;
     default:
         qemu_log_mask(LOG_UNIMP, "%s: unimplemented write to 0x%" HWADDR_PRIx "\n",
                   __func__, addr);
         break;
     }
+
+    trace_esp8266_adc_write(addr, value);
 }
 
 static const MemoryRegionOps esp8266_adc_ops = {
@@ -56,7 +87,7 @@ static void esp8266_adc_init(Object *obj)
     SysBusDevice *sbd = SYS_BUS_DEVICE(obj);
 
     memory_region_init_io(&s->iomem, obj, &esp8266_adc_ops, s,
-                          TYPE_ESP8266_ADC, 0x100);
+                          TYPE_ESP8266_ADC, 0xB0);
     sysbus_init_mmio(sbd, &s->iomem);
 }
 
