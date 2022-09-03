@@ -10,3 +10,4 @@ aspeed_adc_engine_write(uint32_t engine_id, uint64_t addr, uint64_t value) "engi
 # esp8266_adc.c
 esp8266_adc_read(uint32_t addr, uint32_t value) "addr: 0x%04" PRIx32 " value 0x%04" PRIx32
 esp8266_adc_write(uint32_t addr, uint32_t value) "addr: 0x%04" PRIx32 " value 0x%04" PRIx32
+esp8266_adc_start_sampling(uint16_t reads) "ADC sampled (%u reads window)"

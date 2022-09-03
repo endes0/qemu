@@ -11,16 +11,19 @@ typedef struct Esp8266AdcState {
     SysBusDevice parent_obj;
     MemoryRegion iomem;
 
+    bool enable;
     bool vdd_mode;
     bool tout_mode;
+    uint16_t reads;
+    
 
 } Esp8266AdcState;
 
 REG32(SAR_CFG, 0x0)
-    FIELD(SAR_CFG, UNK0, 0, 1) // enable adc? bg_init en_pwdet
+    FIELD(SAR_CFG, ADC_ENABLE, 0, 1) // if ADC is disable, other data can be read (normally tx power)
     FIELD(SAR_CFG, START, 1, 1)
     FIELD(SAR_CFG, READS, 2, 3)
-    FIELD(SAR_CFG, UNK1, 5, 1) // 
+    FIELD(SAR_CFG, UNK, 5, 1) 
     FIELD(SAR_CFG, CLK_DIV, 8, 8)
     FIELD(SAR_CFG, READY_STATE, 24, 3)
 
