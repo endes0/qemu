@@ -120,6 +120,7 @@ static void esp8266_soc_reset(DeviceState *dev)
         for (int i = 0; i < ESP32_I2C_COUNT; i++) {
             device_cold_reset(DEVICE(&s->i2c[i]));
         }*/
+        device_cold_reset(DEVICE(&s->pm));
         device_cold_reset(DEVICE(&s->adc));
         device_cold_reset(DEVICE(&s->efuse));
         /*if (s->eth) {
@@ -346,6 +347,10 @@ static void esp8266_soc_realize(DeviceState *dev, Error **errp)
     qdev_realize(DEVICE(&s->hdrf), &s->periph_bus, &error_fatal);
     esp8266_soc_add_periph_device(sys_mem, &s->hdrf, DR_REG_HDRF_BASE);
 
+    //Device: PM
+    qdev_realize(DEVICE(&s->pm), &s->periph_bus, &error_fatal);
+    esp8266_soc_add_periph_device(sys_mem, &s->pm, DR_REG_PM_BASE);
+
     //Device: ADC
     qdev_realize(DEVICE(&s->adc), &s->periph_bus, &error_fatal);
     esp8266_soc_add_periph_device(sys_mem, &s->adc, DR_REG_SAR_BASE);
@@ -461,6 +466,8 @@ static void esp8266_soc_init(Object *obj)
     //object_initialize_child(obj, "rsa", &s->rsa, TYPE_ESP32_RSA);
 
     object_initialize_child(obj, "hdrf", &s->hdrf, TYPE_ESP8266_HDRF);
+
+    object_initialize_child(obj, "pm", &s->pm, TYPE_ESP8266_PM);
 
     object_initialize_child(obj, "adc", &s->adc, TYPE_ESP8266_ADC);
 

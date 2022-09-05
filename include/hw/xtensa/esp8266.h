@@ -7,6 +7,7 @@
 #include "hw/misc/esp8266_dport.h"
 #include "hw/misc/esp8266_rtc_cntl.h"
 #include "hw/misc/esp8266_hdrf.h"
+#include "hw/misc/esp8266_pm.h"
 #include "hw/char/esp32_uart.h"
 #include "hw/nvram/esp8266_efuse.h"
 #include "hw/gpio/esp8266_gpio.h"
@@ -31,6 +32,7 @@ typedef struct Esp8266SocState {
     //Esp32TimgState timg[ESP32_TIMG_COUNT];
     Esp32SpiState spi[2];
     Esp8266HdrfState hdrf;
+    Esp8266PmState pm;
     Esp8266AdcState adc;
     //Esp32I2CState i2c[ESP32_I2C_COUNT];
     //Esp32ShaState sha;
