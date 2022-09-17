@@ -15,4 +15,4 @@ typedef struct Esp8266PmState {
 } Esp8266PmState;
 
 REG32(TOS_CAL_DATA, 0xc)
-    FIELD(TOS_CAL_DATA, MODE, 0, 2)
+FIELD(TOS_CAL_DATA, MODE, 0, 2)

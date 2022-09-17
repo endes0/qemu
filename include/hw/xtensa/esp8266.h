@@ -1,19 +1,19 @@
 #pragma once
 
 #include "qemu/osdep.h"
-#include "qemu-common.h"
-#include "hw/hw.h"
+#include "hw/adc/esp8266_adc.h"
 #include "hw/boards.h"
+#include "hw/char/esp32_uart.h"
+#include "hw/gpio/esp8266_gpio.h"
+#include "hw/hw.h"
+#include "hw/i2c/esp8266_regi2c.h"
 #include "hw/misc/esp8266_dport.h"
-#include "hw/misc/esp8266_rtc_cntl.h"
 #include "hw/misc/esp8266_hdrf.h"
 #include "hw/misc/esp8266_pm.h"
-#include "hw/char/esp32_uart.h"
+#include "hw/misc/esp8266_rtc_cntl.h"
 #include "hw/nvram/esp8266_efuse.h"
-#include "hw/gpio/esp8266_gpio.h"
 #include "hw/ssi/esp32_spi.h"
-#include "hw/adc/esp8266_adc.h"
-#include "hw/i2c/esp8266_regi2c.h"
+#include "qemu-common.h"
 #include "target/xtensa/cpu.h"
 
 typedef struct Esp8266SocState {
@@ -23,25 +23,15 @@ typedef struct Esp8266SocState {
     /*< public >*/
     XtensaCPU cpu;
     Esp8266DportState dport;
-    //Esp32IntMatrixState intmatrix;
-    //Esp32CrosscoreInt crosscore_int;
     ESP32UARTState uart[2];
     Esp8266GpioState gpio;
-    //Esp32RngState rng;
     Esp8266RtcCntlState rtc_cntl;
-    //Esp32FrcTimerState frc_timer[ESP32_FRC_COUNT];
-    //Esp32TimgState timg[ESP32_TIMG_COUNT];
     Esp32SpiState spi[2];
     Esp8266HdrfState hdrf;
     Esp8266RegI2CState regi2c;
     Esp8266PmState pm;
     Esp8266AdcState adc;
-    //Esp32ShaState sha;
-    //Esp32RsaState rsa;
     Esp8266EfuseState efuse;
-    //Esp32FlashEncryptionState flash_enc;
-    //DWCSDMMCState sdmmc;
-    //DeviceState *eth;
 
     BusState rtc_bus;
     BusState periph_bus;
