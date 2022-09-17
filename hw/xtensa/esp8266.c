@@ -116,10 +116,8 @@ static void esp8266_soc_reset(DeviceState *dev)
         s->timg[0].flash_boot_mode = flash_boot_mode;*/
         for (int i = 0; i < 2; ++i) {
             device_cold_reset(DEVICE(&s->spi[i]));
-        }/*
-        for (int i = 0; i < ESP32_I2C_COUNT; i++) {
-            device_cold_reset(DEVICE(&s->i2c[i]));
-        }*/
+        }
+        device_cold_reset(DEVICE(&s->regi2c));
         device_cold_reset(DEVICE(&s->pm));
         device_cold_reset(DEVICE(&s->adc));
         device_cold_reset(DEVICE(&s->efuse));
@@ -347,6 +345,10 @@ static void esp8266_soc_realize(DeviceState *dev, Error **errp)
     qdev_realize(DEVICE(&s->hdrf), &s->periph_bus, &error_fatal);
     esp8266_soc_add_periph_device(sys_mem, &s->hdrf, DR_REG_HDRF_BASE);
 
+    //Device: Internal i2c bus
+    qdev_realize(DEVICE(&s->regi2c), &s->periph_bus, &error_fatal);
+    esp8266_soc_add_periph_device(sys_mem, &s->regi2c, DR_REG_REGI2C_BASE);
+
     //Device: PM
     qdev_realize(DEVICE(&s->pm), &s->periph_bus, &error_fatal);
     esp8266_soc_add_periph_device(sys_mem, &s->pm, DR_REG_PM_BASE);
@@ -382,8 +384,6 @@ static void esp8266_soc_realize(DeviceState *dev, Error **errp)
     create_unimplemented_device("esp8266.IOMUX", DR_REG_IO_MUX_BASE, 0x100);
     create_unimplemented_device("esp8266.watchdog", DR_REG_WATCHDOG_BASE, 0x200);
     create_unimplemented_device("esp8266.SLC", DR_REG_SLC_BASE, 0x200);
-    //create_unimplemented_device("esp8266.ADC", DR_REG_ADC_RF_BASE, 0x100);
-    create_unimplemented_device("esp8266.I2C", DR_REG_INTERNAL_I2C_BASE, 0x40);
     create_unimplemented_device("esp8266.I2S", DR_REG_I2S_BASE, 0x100);
     create_unimplemented_device("esp8266.WIFI", DR_REG_WIFI_BASE, 0x800);
     create_unimplemented_device("esp8266.WDEV", DR_REG_WDEV_BASE, 0x1800);
@@ -467,6 +467,8 @@ static void esp8266_soc_init(Object *obj)
     //object_initialize_child(obj, "rsa", &s->rsa, TYPE_ESP32_RSA);
 
     object_initialize_child(obj, "hdrf", &s->hdrf, TYPE_ESP8266_HDRF);
+    
+    object_initialize_child(obj, "regi2c", &s->regi2c, TYPE_ESP8266_REGI2C);
 
     object_initialize_child(obj, "pm", &s->pm, TYPE_ESP8266_PM);
 

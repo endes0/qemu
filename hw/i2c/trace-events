@@ -31,3 +31,9 @@ npcm7xx_smbus_recv_fifo(const char *id, uint8_t received, uint8_t expected) "%s 
 
 pca954x_write_bytes(uint8_t value) "PCA954X write data: 0x%02x"
 pca954x_read_data(uint8_t value) "PCA954X read data: 0x%02x"
+
+# esp8266_regi2c.c
+
+esp8266_i2c_recive(uint8_t block, uint8_t reg) "ESP8266 I2C read block: 0x%02x, reg: 0x%02x"
+esp8266_i2c_send(uint8_t block, uint8_t reg, uint8_t data) "ESP8266 I2C write block: 0x%02x, reg: 0x%02x, data: 0x%02x"
+
