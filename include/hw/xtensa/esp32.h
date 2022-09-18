@@ -11,6 +11,10 @@
 #include "hw/misc/esp32_rtc_cntl.h"
 #include "hw/misc/esp32_rng.h"
 #include "hw/misc/esp32_sha.h"
+<<<<<<< HEAD
+=======
+#include "hw/misc/esp32_aes.h"
+>>>>>>> upstream/esp-develop
 #include "hw/misc/esp32_rsa.h"
 #include "hw/timer/esp32_frc_timer.h"
 #include "hw/timer/esp32_timg.h"
@@ -40,6 +44,7 @@ typedef struct Esp32SocState {
     Esp32SpiState spi[ESP32_SPI_COUNT];
     Esp32I2CState i2c[ESP32_I2C_COUNT];
     Esp32ShaState sha;
+    Esp32AesState aes;
     Esp32RsaState rsa;
     Esp32EfuseState efuse;
     Esp32FlashEncryptionState flash_enc;

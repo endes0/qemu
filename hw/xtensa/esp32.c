@@ -27,6 +27,7 @@
 #include "hw/xtensa/esp32.h"
 #include "hw/misc/ssi_psram.h"
 #include "hw/sd/dwc_sdmmc.h"
+#include "core-esp32/core-isa.h"
 #include "qemu/datadir.h"
 #include "sysemu/sysemu.h"
 #include "sysemu/reset.h"
@@ -43,7 +44,6 @@
 
 #define TYPE_ESP32_CPU XTENSA_CPU_TYPE_NAME("esp32")
 
-typedef struct XtensaCPU XtensaCPU;
 
 
 enum {
@@ -164,6 +164,7 @@ static void esp32_soc_reset(DeviceState *dev)
         device_cold_reset(DEVICE(&s->dport));
         device_cold_reset(DEVICE(&s->intmatrix));
         device_cold_reset(DEVICE(&s->sha));
+        device_cold_reset(DEVICE(&s->aes));
         device_cold_reset(DEVICE(&s->rsa));
         device_cold_reset(DEVICE(&s->gpio));
         for (int i = 0; i < ESP32_UART_COUNT; ++i) {
@@ -385,6 +386,9 @@ static void esp32_soc_realize(DeviceState *dev, Error **errp)
     qdev_realize(DEVICE(&s->sha), &s->periph_bus, &error_fatal);
     esp32_soc_add_periph_device(sys_mem, &s->sha, DR_REG_SHA_BASE);
 
+    qdev_realize(DEVICE(&s->aes), &s->periph_bus, &error_fatal);
+    esp32_soc_add_periph_device(sys_mem, &s->aes, DR_REG_AES_BASE);
+
     qdev_realize(DEVICE(&s->rtc_cntl), &s->rtc_bus, &error_fatal);
     esp32_soc_add_periph_device(sys_mem, &s->rtc_cntl, DR_REG_RTCCNTL_BASE);
 
@@ -590,6 +594,8 @@ static void esp32_soc_init(Object *obj)
 
     object_initialize_child(obj, "sha", &s->sha, TYPE_ESP32_SHA);
 
+    object_initialize_child(obj, "aes", &s->aes, TYPE_ESP32_AES);
+
     object_initialize_child(obj, "rsa", &s->rsa, TYPE_ESP32_RSA);
 
     object_initialize_child(obj, "efuse", &s->efuse, TYPE_ESP32_EFUSE);
@@ -716,7 +722,7 @@ static void esp32_machine_init_openeth(Esp32SocState *ss)
 
 static void esp32_machine_init_sd(Esp32SocState *ss)
 {
-    DriveInfo *dinfo = drive_get_next(IF_SD);
+    DriveInfo *dinfo = drive_get(IF_SD, 0, 0);
     if (dinfo) {
         DeviceState *card;
 
@@ -733,7 +739,7 @@ static void esp32_machine_init_sd(Esp32SocState *ss)
 static void esp32_machine_init(MachineState *machine)
 {
     BlockBackend* blk = NULL;
-    DriveInfo *dinfo = drive_get_next(IF_MTD);
+    DriveInfo *dinfo = drive_get(IF_MTD, 0, 0);
     if (dinfo) {
         qemu_log("Adding SPI flash device\n");
         blk = blk_by_legacy_dinfo(dinfo);
@@ -788,12 +794,32 @@ static void esp32_machine_init(MachineState *machine)
     if (load_elf_filename) {
         uint64_t elf_entry;
         uint64_t elf_lowaddr;
-        int success = load_elf(load_elf_filename, NULL,
+        int size = load_elf(load_elf_filename, NULL,
                                translate_phys_addr, &ss->cpu[0],
                                &elf_entry, &elf_lowaddr,
                                NULL, NULL, 0, EM_XTENSA, 0, 0);
-        if (success > 0) {
-            ss->cpu[0].env.pc = elf_entry;
+        if (size < 0) {
+            error_report("Error: could not load ELF file '%s'", load_elf_filename);
+            exit(1);
+        }
+
+        if (elf_entry != XCHAL_RESET_VECTOR_PADDR) {
+            // Since ROM is empty when loading elf file AND
+            // PC value is 0x40000400 after reset
+            // need to jump to elf entry point to run a programm
+            uint8_t p[4];
+            memcpy(p, &elf_entry, 4);
+            uint8_t boot[] = {
+                0x06, 0x01, 0x00,       /* j    1 */
+                0x00,                   /* .literal_position */
+                p[0], p[1], p[2], p[3], /* .literal elf_entry */
+                                        /* 1: */
+                0x01, 0xff, 0xff,       /* l32r a0, elf_entry */
+                0xa0, 0x00, 0x00,       /* jx   a0 */
+            };
+            // Write boot function to reset-vector address (0x40000400) of the CPU 0
+            rom_add_blob_fixed_as("boot", boot, sizeof(boot), XCHAL_RESET_VECTOR_PADDR, CPU(&ss->cpu[0])->as);
+            ss->cpu[0].env.pc = XCHAL_RESET_VECTOR_PADDR;
         }
     } else {
         char *rom_binary = qemu_find_file(QEMU_FILE_TYPE_BIOS, "esp32-v3-rom.bin");
@@ -865,4 +891,3 @@ static void esp32_machine_type_init(void)
 }
 
 type_init(esp32_machine_type_init);
-

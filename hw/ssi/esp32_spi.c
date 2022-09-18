@@ -90,6 +90,9 @@ static uint64_t esp32_spi_read(void *opaque, hwaddr addr, unsigned int size)
     case A_SPI_EXT2:
         r = 0;
         break;
+    case A_SPI_SLAVE:
+        r = BIT(R_SPI_SLAVE_TRANS_DONE_SHIFT) | BIT(R_SPI_SLAVE_TRANS_INTEN_SHIFT);
+        break;
     }
     return r;
 }
@@ -144,7 +147,6 @@ static void esp32_spi_write(void *opaque, hwaddr addr,
         s->pin_reg = value;
         break;
     case A_SPI_CMD:
-        //qemu_log("SPI command: 0x%lx\n", value);
         esp32_spi_do_command(s, value);
         break;
     }
@@ -190,13 +192,6 @@ static void esp32_spi_transaction(Esp32SpiState *s, Esp32SpiTransaction *t)
     esp32_spi_txrx_buffer(s, &t->addr, t->addr_bytes, 0);
     esp32_spi_txrx_buffer(s, t->data, t->data_tx_bytes, t->data_rx_bytes);
     esp32_spi_cs_set(s, 1);
-
-    /*qemu_log("SPI transaction: cmd: 0x%x, addr: 0x%x\n", t->cmd, bswap32(t->addr));
-    qemu_log("SPI data: ");
-    for (int i = 0; i * sizeof(uint32_t) < MAX(t->data_tx_bytes, t->data_rx_bytes); i++) {
-        qemu_log("0x%x ", t->data[i]);
-    }
-    qemu_log("\n");*/
 }
 
 /* Convert one of the hardware "bitlen" registers to a byte count */
@@ -227,8 +222,8 @@ static void esp32_spi_do_command(Esp32SpiState* s, uint32_t cmd_reg)
             t.addr_bytes = 3;
         } else
         {
-            t.addr = bswap32(s->addr_reg) >> (32 - t.addr_bytes * 8);
             t.addr_bytes = bitlen_to_bytes(FIELD_EX32(s->user1_reg, SPI_USER1, ADDR_BITLEN));
+            t.addr = bswap32(s->addr_reg) >> (32 - t.addr_bytes * 8);
         }
         t.data = &s->data_reg[0];
         if (s->is_esp8266)
@@ -237,9 +232,7 @@ static void esp32_spi_do_command(Esp32SpiState* s, uint32_t cmd_reg)
         } else
         {
             t.data_rx_bytes = bitlen_to_bytes(s->miso_dlen_reg);
-        }
-
-        //qemu_log("SPI reading %d bytes from 0x%x\n", t.data_rx_bytes, t.addr);
+        };
         break;
 
     case R_SPI_CMD_WREN_MASK:
@@ -292,8 +285,8 @@ static void esp32_spi_do_command(Esp32SpiState* s, uint32_t cmd_reg)
             t.addr_bytes = 3;
         } else
         {
-            t.addr = bswap32(s->addr_reg) >> (32 - t.addr_bytes * 8);
             t.addr_bytes = bitlen_to_bytes(FIELD_EX32(s->user1_reg, SPI_USER1, ADDR_BITLEN));
+            t.addr = bswap32(s->addr_reg) >> (32 - t.addr_bytes * 8);
         }
         break;
 
@@ -306,8 +299,8 @@ static void esp32_spi_do_command(Esp32SpiState* s, uint32_t cmd_reg)
 
         } else
         {
-            t.addr = bswap32(s->addr_reg) >> (32 - t.addr_bytes * 8);
             t.addr_bytes = bitlen_to_bytes(FIELD_EX32(s->user1_reg, SPI_USER1, ADDR_BITLEN));
+            t.addr = bswap32(s->addr_reg) >> (32 - t.addr_bytes * 8);
         }
         break;
 
